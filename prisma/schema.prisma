@@ -1,0 +1,31 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model BookingRequest {
+  id                  String        @id @default(cuid())
+  fullName            String
+  phone               String
+  email               String
+  vehicleYear         Int
+  vehicleMake         String
+  vehicleModel        String
+  mileage             String
+  oilType             String
+  serviceAddress      String
+  preferredDate       DateTime
+  preferredTimeWindow String
+  notes               String?
+  status              String        @default("NEW")
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  @@index([email, preferredDate])
+  @@index([status])
+  @@index([createdAt])
+}

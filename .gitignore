@@ -1,0 +1,16 @@
+node_modules
+.next
+out
+.env
+.env.local
+dev.db
+*.db
+*.db-journal
+prisma/dev.db
+prisma/dev.db-journal
+dist
+coverage
+.vercel
+.pnpm-store
+.agents
+.codex
