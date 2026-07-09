@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { timeWindows } from "@/lib/site";
+import { oilTypeLabels, siteConfig, timeWindows, type OilTypeValue } from "@/lib/site";
+import { bookingSchema, type BookingFormInput } from "@/lib/validation";
 
-type FieldErrors = Record<string, string[]>;
+type FieldErrors = Partial<Record<string, string[] | undefined>>;
 
 type BookingFormProps = {
   compact?: boolean;
@@ -30,6 +31,7 @@ export function BookingForm({ compact = false }: BookingFormProps) {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [message, setMessage] = useState("");
+  const [mailtoUrl, setMailtoUrl] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -45,35 +47,35 @@ export function BookingForm({ compact = false }: BookingFormProps) {
     });
   }
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
     setMessage("");
+    setMailtoUrl("");
     setIsSuccess(false);
 
-    const response = await fetch("/api/bookings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...values,
-        consent: values.consent ? "on" : undefined
-      })
+    const result = bookingSchema.safeParse({
+      ...values,
+      consent: values.consent ? "on" : undefined
     });
-
-    const result = await response.json();
 
     setIsSubmitting(false);
 
-    if (!response.ok) {
-      setErrors(result.fieldErrors || {});
-      setMessage(result.message || "Please review the highlighted fields.");
+    if (!result.success) {
+      setErrors(result.error.flatten().fieldErrors);
+      setMessage("Please review the highlighted fields.");
       return;
     }
+
+    const booking = result.data;
+    const mailto = buildMailtoUrl(booking);
 
     setValues(initialValues);
     setErrors({});
     setIsSuccess(true);
-    setMessage("Request received. We will review your details and contact you to confirm availability.");
+    setMailtoUrl(mailto);
+    setMessage("Your request is ready. Send the email that opens so we can review and confirm your appointment.");
+    window.location.href = mailto;
   }
 
   const formClass = compact
@@ -103,6 +105,11 @@ export function BookingForm({ compact = false }: BookingFormProps) {
           }`}
         >
           {message}
+          {isSuccess && mailtoUrl ? (
+            <a className="mt-3 inline-flex underline" href={mailtoUrl}>
+              Open email request again
+            </a>
+          ) : null}
         </div>
       ) : null}
 
@@ -260,6 +267,37 @@ export function BookingForm({ compact = false }: BookingFormProps) {
       </button>
     </form>
   );
+}
+
+function buildMailtoUrl(booking: BookingFormInput) {
+  const oilType = oilTypeLabels[booking.oilType as OilTypeValue];
+  const preferredDate = booking.preferredDate.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric"
+  });
+  const subject = `Mobile oil change request - ${booking.fullName}`;
+  const body = [
+    "New mobile oil change request",
+    "",
+    `Name: ${booking.fullName}`,
+    `Phone: ${booking.phone}`,
+    `Email: ${booking.email}`,
+    "",
+    `Vehicle: ${booking.vehicleYear} ${booking.vehicleMake} ${booking.vehicleModel}`,
+    `Mileage: ${booking.mileage}`,
+    `Oil type: ${oilType}`,
+    "",
+    `Service address: ${booking.serviceAddress}`,
+    `Preferred date: ${preferredDate}`,
+    `Preferred time window: ${booking.preferredTimeWindow}`,
+    "",
+    `Notes: ${booking.notes || "None"}`,
+    "",
+    "I understand this is a request and my appointment is not confirmed until Rapid Mobile Oil Change contacts me."
+  ].join("\n");
+
+  return `mailto:${siteConfig.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 function Field({

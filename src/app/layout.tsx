@@ -131,9 +131,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <Link href="/terms" className="block hover:text-amber">
                 Terms / Disclaimer
               </Link>
-              <Link href="/admin" className="block hover:text-amber">
-                Admin
-              </Link>
             </div>
           </div>
         </footer>
