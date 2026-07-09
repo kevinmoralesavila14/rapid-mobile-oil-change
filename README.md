@@ -67,10 +67,12 @@ out
 
 Use these Cloudflare Pages settings:
 
-- Framework preset: `Next.js`
+- Framework preset: `Next.js (Static HTML Export)`
 - Build command: `npm run build`
 - Build output directory: `out`
 - Root directory: leave blank
+
+If Cloudflare shows a build command like `bunx opennextjs-cloudflare build`, the project is using the full-stack Next.js adapter instead of the static export preset. Change the Pages build settings to the values above so Cloudflare runs the normal static build and uploads the `out` folder.
 
 Add environment variables in Cloudflare Pages if you want production values:
 
