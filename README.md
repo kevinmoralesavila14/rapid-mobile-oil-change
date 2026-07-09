@@ -74,6 +74,8 @@ Use these Cloudflare Pages settings:
 
 If Cloudflare shows a build command like `bunx opennextjs-cloudflare build`, the project is using the full-stack Next.js adapter instead of the static export preset. Change the Pages build settings to the values above so Cloudflare runs the normal static build and uploads the `out` folder.
 
+Do not deploy this repo as a Cloudflare Worker and do not use a Wrangler build/deploy command for this static version. Cloudflare Pages should install dependencies, run `npm run build`, and publish the generated `out` folder.
+
 Add environment variables in Cloudflare Pages if you want production values:
 
 ```env
